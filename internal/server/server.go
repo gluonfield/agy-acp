@@ -96,7 +96,7 @@ func (s *Server) initialize() acpschema.InitializeResponse {
 		AgentInfo: &acpschema.Implementation{
 			Name:    "agy-acp",
 			Title:   "Antigravity",
-			Version: "0.1.1",
+			Version: "0.1.2",
 		},
 		AgentCapabilities: &acpschema.AgentCapabilities{
 			LoadSession: true,

@@ -1,2 +1,4 @@
 github.com/gluonfield/acp-transport v0.0.0-20260702095144-1e519daf5df6 h1:HBTgY0cm+n3NFqSz5EFhLl83LZ5Gxh1UwcPYknAZghI=
 github.com/gluonfield/acp-transport v0.0.0-20260702095144-1e519daf5df6/go.mod h1:jaQ1JT5TMUkf2UuoOWj7R+11TdDPchowCORiMzNiSnM=
+github.com/gluonfield/agy-go v0.1.0 h1:GiaH3ZiOtmBJsFLmjGuIoJRVtAmVXCE/acfqz4i/xys=
+github.com/gluonfield/agy-go v0.1.0/go.mod h1:3cYOos40kHZsJkioDGqb3J+jpMFkoWvdnLpjm+gQZv8=
