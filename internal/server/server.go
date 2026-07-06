@@ -48,7 +48,6 @@ type session struct {
 	SystemSent     bool
 	Mode           string
 	Model          string
-	Effort         string
 }
 
 func New(agent agy.Agent, opts Options) *Server {
@@ -97,7 +96,7 @@ func (s *Server) initialize() acpschema.InitializeResponse {
 		AgentInfo: &acpschema.Implementation{
 			Name:    "agy-acp",
 			Title:   "Antigravity",
-			Version: "0.1.0",
+			Version: "0.1.1",
 		},
 		AgentCapabilities: &acpschema.AgentCapabilities{
 			LoadSession: true,
@@ -132,7 +131,7 @@ func (s *Server) sessionNew(params json.RawMessage) (json.RawMessage, *jsonrpc.E
 	return jsonrpc.EncodeResult(map[string]any{
 		"sessionId":     id,
 		"modes":         s.modeState(state.Mode),
-		"configOptions": s.configOptions(state.Model, state.Effort),
+		"configOptions": s.configOptions(state.Model),
 	})
 }
 
@@ -154,7 +153,7 @@ func (s *Server) sessionLoad(params json.RawMessage) (json.RawMessage, *jsonrpc.
 	s.mu.Unlock()
 	return jsonrpc.EncodeResult(map[string]any{
 		"modes":         s.modeState(state.Mode),
-		"configOptions": s.configOptions(state.Model, state.Effort),
+		"configOptions": s.configOptions(state.Model),
 	})
 }
 
@@ -277,19 +276,17 @@ func (s *Server) sessionSetConfigOption(params json.RawMessage) (json.RawMessage
 		switch string(req.ConfigID) {
 		case "model":
 			state.Model = string(req.Value)
-		case "reasoning_effort", "effort":
-			state.Effort = string(req.Value)
 		}
 	}
-	model, effort := "", ""
+	model := ""
 	if state != nil {
-		model, effort = state.Model, state.Effort
+		model = state.Model
 	}
 	s.mu.Unlock()
 	if state == nil {
 		return nil, jsonrpc.InvalidParams("unknown session", map[string]any{"sessionId": id})
 	}
-	return jsonrpc.EncodeResult(map[string]any{"configOptions": s.configOptions(model, effort)})
+	return jsonrpc.EncodeResult(map[string]any{"configOptions": s.configOptions(model)})
 }
 
 func (s *Server) snapshot(id string) (session, bool) {
@@ -327,7 +324,7 @@ func (s *Server) modeState(current string) map[string]any {
 	}
 }
 
-func (s *Server) configOptions(currentModel, currentEffort string) []map[string]any {
+func (s *Server) configOptions(currentModel string) []map[string]any {
 	models := s.modelOptions(currentModel)
 	return []map[string]any{
 		{
@@ -336,19 +333,6 @@ func (s *Server) configOptions(currentModel, currentEffort string) []map[string]
 			"category":     "model",
 			"currentValue": firstNonEmpty(currentModel, firstOption(models)),
 			"options":      models,
-		},
-		{
-			"id":           "reasoning_effort",
-			"name":         "Reasoning Effort",
-			"category":     "thought_level",
-			"currentValue": currentEffort,
-			"options": []map[string]string{
-				{"value": "", "name": "Default"},
-				{"value": "minimal", "name": "Minimal"},
-				{"value": "low", "name": "Low"},
-				{"value": "medium", "name": "Medium"},
-				{"value": "high", "name": "High"},
-			},
 		},
 	}
 }
