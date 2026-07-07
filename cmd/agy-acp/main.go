@@ -55,6 +55,7 @@ func selectAgent(ctx context.Context, mode, agyBin string, store *agy.Store) (ag
 		mode = "auto"
 	}
 	cli := agy.NewCLIClient(agyBin, store)
+	cli.NoBrowser = true
 	switch mode {
 	case "oauth":
 		return cli, "oauth", nil
