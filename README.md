@@ -7,14 +7,13 @@ ACP stdio adapter for Google Antigravity.
 ```sh
 agy-acp --auth=auto
 agy-acp --auth=oauth
-GEMINI_API_KEY=... agy-acp --auth=api-key
+agy-acp --agy=/path/to/agy
 ```
 
 ## Auth
 
 - `oauth`: uses `agy` through `agy-go`, so it reuses Antigravity CLI OAuth.
-- `api-key`: uses the official Python SDK through `agy-go`, so it needs `google-antigravity` installed and `GEMINI_API_KEY` set.
-- `auto`: prefers working CLI OAuth, then falls back to `GEMINI_API_KEY`.
+- `auto`: uses the same CLI backend, checking OAuth status when the adapter starts.
 
 ## ACP Surface
 

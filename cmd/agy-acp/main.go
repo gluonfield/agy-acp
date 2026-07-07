@@ -17,13 +17,11 @@ import (
 func main() {
 	var authMode string
 	var agyBin string
-	var python string
 	var model string
 	var timeout time.Duration
 	var allowAll bool
-	flag.StringVar(&authMode, "auth", "auto", "auto, oauth, or api-key")
+	flag.StringVar(&authMode, "auth", "auto", "auto or oauth")
 	flag.StringVar(&agyBin, "agy", "agy", "Antigravity CLI executable")
-	flag.StringVar(&python, "python", "python3", "Python executable for SDK API-key mode")
 	flag.StringVar(&model, "model", "", "default model")
 	flag.DurationVar(&timeout, "timeout", 5*time.Minute, "turn timeout")
 	flag.BoolVar(&allowAll, "dangerously-skip-permissions", false, "let the selected Antigravity backend run with broad workspace permissions")
@@ -33,7 +31,7 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
-	agent, backend, err := selectAgent(context.Background(), authMode, agyBin, python, store)
+	agent, backend, err := selectAgent(context.Background(), authMode, agyBin, store)
 	if err != nil {
 		exit(err)
 	}
@@ -51,23 +49,18 @@ func main() {
 	}
 }
 
-func selectAgent(ctx context.Context, mode, agyBin, python string, store *agy.Store) (agy.Agent, string, error) {
+func selectAgent(ctx context.Context, mode, agyBin string, store *agy.Store) (agy.Agent, string, error) {
 	mode = strings.ToLower(strings.TrimSpace(mode))
 	if mode == "" {
 		mode = "auto"
 	}
+	cli := agy.NewCLIClient(agyBin, store)
 	switch mode {
 	case "oauth":
-		return agy.NewCLIClient(agyBin, store), "oauth", nil
-	case "api-key":
-		return agy.NewSDKClient(python, os.Getenv("GEMINI_API_KEY"), store), "api-key", nil
+		return cli, "oauth", nil
 	case "auto":
-		cli := agy.NewCLIClient(agyBin, store)
 		if status, err := cli.AuthStatus(ctx); err == nil && status.Authenticated {
 			return cli, "oauth", nil
-		}
-		if strings.TrimSpace(os.Getenv("GEMINI_API_KEY")) != "" {
-			return agy.NewSDKClient(python, os.Getenv("GEMINI_API_KEY"), store), "api-key", nil
 		}
 		return cli, "oauth", nil
 	default:
