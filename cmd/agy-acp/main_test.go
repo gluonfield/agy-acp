@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"strings"
 	"testing"
 
@@ -13,7 +12,7 @@ func TestSelectAgentRejectsAPIKeyMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = selectAgent(context.Background(), "api-key", "agy", store)
+	_, _, err = selectAgent("api-key", "agy", store)
 	if err == nil || !strings.Contains(err.Error(), "unknown auth mode") {
 		t.Fatalf("err = %v, want unsupported api-key mode", err)
 	}

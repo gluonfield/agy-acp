@@ -202,8 +202,8 @@ func (s *Server) sessionPrompt(ctx context.Context, params json.RawMessage) (jso
 		if errors.Is(err, context.Canceled) {
 			return jsonrpc.EncodeResult(acpschema.PromptResponse{StopReason: acpschema.StopReasonCancelled})
 		}
-		if isSignedOut(err) {
-			return nil, jsonrpc.InternalError("Antigravity is not signed in. Reconnect your Google account in Settings > Agents > Antigravity.", map[string]any{"error": err.Error()})
+		if agy.IsSignedOut(err) {
+			return nil, jsonrpc.InternalError("Antigravity sign-in failed. Retry, or reconnect your Google account in Settings > Agents > Antigravity.", map[string]any{"error": err.Error()})
 		}
 		return nil, jsonrpc.InternalError("antigravity turn failed", map[string]any{"error": err.Error()})
 	}
@@ -413,16 +413,6 @@ func (s *Server) notify(ctx context.Context, sessionID string, update map[string
 
 func (s *Server) messageID(prefix string) string {
 	return fmt.Sprintf("agy:%s:%d", prefix, s.seq.Add(1))
-}
-
-// isSignedOut matches the Antigravity CLI's sign-in failures: "You are not
-// logged into Antigravity", "Please sign in ...", and the "authentication
-// failed or timed out" print-mode error after its OAuth fallback is suppressed.
-func isSignedOut(err error) bool {
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "not logged in") ||
-		strings.Contains(msg, "please sign in") ||
-		strings.Contains(msg, "authentication failed or timed out")
 }
 
 func promptText(blocks []acpschema.ContentBlock) (string, error) {

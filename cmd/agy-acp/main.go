@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		exit(err)
 	}
-	agent, backend, err := selectAgent(context.Background(), authMode, agyBin, store)
+	agent, backend, err := selectAgent(authMode, agyBin, store)
 	if err != nil {
 		exit(err)
 	}
@@ -49,7 +49,7 @@ func main() {
 	}
 }
 
-func selectAgent(ctx context.Context, mode, agyBin string, store *agy.Store) (agy.Agent, string, error) {
+func selectAgent(mode, agyBin string, store *agy.Store) (agy.Agent, string, error) {
 	mode = strings.ToLower(strings.TrimSpace(mode))
 	if mode == "" {
 		mode = "auto"
@@ -57,12 +57,7 @@ func selectAgent(ctx context.Context, mode, agyBin string, store *agy.Store) (ag
 	cli := agy.NewCLIClient(agyBin, store)
 	cli.NoBrowser = true
 	switch mode {
-	case "oauth":
-		return cli, "oauth", nil
-	case "auto":
-		if status, err := cli.AuthStatus(ctx); err == nil && status.Authenticated {
-			return cli, "oauth", nil
-		}
+	case "oauth", "auto":
 		return cli, "oauth", nil
 	default:
 		return nil, "", fmt.Errorf("unknown auth mode %q", mode)
