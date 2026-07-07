@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: [v*]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Tag or ref to build, for example v0.1.4
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_REF: ${{ github.event.inputs.ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go test ./...
+      - name: Build archives
+        run: |
+          set -euo pipefail
+          version="${RELEASE_REF#v}"
+          mkdir -p build dist
+          build() {
+            local goos="$1" goarch="$2" platform="$3" binary="agy-acp"
+            if [ "$goos" = "windows" ]; then
+              binary="agy-acp.exe"
+            fi
+            local dir="build/${platform}"
+            mkdir -p "$dir"
+            CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags="-s -w" -o "${dir}/${binary}" ./cmd/agy-acp
+            tar -C "$dir" -czf "dist/agy-acp-${version}-${platform}.tar.gz" "$binary"
+          }
+          build darwin arm64 darwin-arm64
+          build darwin amd64 darwin-x64
+          build linux arm64 linux-arm64
+          build linux amd64 linux-x64
+          build windows arm64 win32-arm64
+          build windows amd64 win32-x64
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_REF" >/dev/null 2>&1 || gh release create "$RELEASE_REF" --title "$RELEASE_REF" --notes "agy-acp ${RELEASE_REF}"
+          gh release upload "$RELEASE_REF" dist/*.tar.gz --clobber
